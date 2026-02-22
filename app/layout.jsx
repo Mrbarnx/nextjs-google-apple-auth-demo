@@ -1,4 +1,5 @@
 import "./globals.css";
+import AuthSessionProvider from "@/components/session-provider";
 
 export const metadata = {
   title: "Social Signup Demo",
@@ -8,7 +9,9 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <AuthSessionProvider>{children}</AuthSessionProvider>
+      </body>
     </html>
   );
 }

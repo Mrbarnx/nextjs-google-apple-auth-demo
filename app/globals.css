@@ -122,3 +122,82 @@ body {
   color: var(--text-muted);
   font-size: 0.82rem;
 }
+
+.dashboardCard {
+  max-width: 840px;
+  padding: 26px;
+}
+
+.dashboardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.statusPill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f7f9fd;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.dashboardGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.infoPanel {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: #fbfcff;
+}
+
+.panelTitle {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.panelText {
+  margin: 0 0 12px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px dashed var(--line);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.infoRow:first-of-type {
+  border-top: 0;
+  padding-top: 2px;
+}
+
+.infoRow strong {
+  color: var(--text-main);
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 0.82rem;
+}
+
+@media (min-width: 760px) {
+  .dashboardGrid {
+    grid-template-columns: 1.2fr 1fr;
+  }
+}

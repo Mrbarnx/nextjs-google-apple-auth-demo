@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { getFirebaseAuth } from "@/lib/firebaseClient";
+import { signOut, useSession } from "next-auth/react";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [status, setStatus] = useState("Loading your session...");
+  const { data: session, status: sessionStatus } = useSession();
+  const [pageStatus, setPageStatus] = useState("Loading your session...");
   const [userData, setUserData] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -21,37 +21,26 @@ export default function DashboardPage() {
         email: mockUser.email,
         displayName: mockUser.displayName,
       });
-      setStatus("Signed in");
+      setPageStatus("Signed in");
+      return;
+    }
+    if (sessionStatus === "loading") {
       return;
     }
 
-    let auth;
-    try {
-      auth = getFirebaseAuth();
-    } catch (error) {
-      console.error("Firebase config error:", error);
-      setStatus("Missing Firebase config");
+    if (sessionStatus !== "authenticated" || !session?.user) {
       router.replace("/");
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.replace("/");
-        return;
-      }
-
-      setUserData({
-        provider: "Google/Apple (Firebase)",
-        uid: user.uid,
-        email: user.email,
-        displayName: user.displayName,
-      });
-      setStatus("Signed in");
+    setUserData({
+      provider: "Google (Auth.js)",
+      uid: session.user.id || "N/A",
+      email: session.user.email || "N/A",
+      displayName: session.user.name || "N/A",
     });
-
-    return () => unsubscribe();
-  }, [router]);
+    setPageStatus("Signed in");
+  }, [router, session, sessionStatus]);
 
   const handleSignOut = async () => {
     if (busy) {
@@ -61,15 +50,7 @@ export default function DashboardPage() {
     try {
       setBusy(true);
       window.sessionStorage.removeItem("mockAppleUser");
-
-      try {
-        const auth = getFirebaseAuth();
-        await signOut(auth);
-      } catch (error) {
-        console.log("No Firebase session to sign out:", error);
-      }
-
-      router.replace("/");
+      await signOut({ callbackUrl: "/" });
     } finally {
       setBusy(false);
     }
@@ -77,22 +58,44 @@ export default function DashboardPage() {
 
   return (
     <main className="page">
-      <section className="card">
-        <h1 className="title">Dashboard</h1>
-        <p className="subtitle">{status}</p>
+      <section className="card dashboardCard">
+        <header className="dashboardHeader">
+          <div>
+            <h1 className="title">Dashboard</h1>
+            <p className="subtitle">{pageStatus}</p>
+          </div>
+          <span className="statusPill">{userData?.provider || "Checking session"}</span>
+        </header>
 
         {userData ? (
-          <div className="buttonStack" style={{ gap: "8px", marginBottom: "14px" }}>
-            <div><strong>Provider:</strong> {userData.provider}</div>
-            <div><strong>Name:</strong> {userData.displayName || "N/A"}</div>
-            <div><strong>Email:</strong> {userData.email || "N/A"}</div>
-            <div><strong>User ID:</strong> {userData.uid || "N/A"}</div>
-          </div>
-        ) : null}
+          <div className="dashboardGrid">
+            <article className="infoPanel">
+              <h2 className="panelTitle">Profile</h2>
+              <div className="infoRow"><span>Name</span><strong>{userData.displayName || "N/A"}</strong></div>
+              <div className="infoRow"><span>Email</span><strong>{userData.email || "N/A"}</strong></div>
+              <div className="infoRow"><span>Provider</span><strong>{userData.provider}</strong></div>
+              <div className="infoRow"><span>User ID</span><strong className="mono">{userData.uid || "N/A"}</strong></div>
+            </article>
 
-        <button type="button" className="authButton appleBtn" onClick={handleSignOut} disabled={busy}>
-          {busy ? "Signing out..." : "Sign out"}
-        </button>
+            <article className="infoPanel">
+              <h2 className="panelTitle">Session</h2>
+              <p className="panelText">
+                You are signed in and can access protected pages. This page can be expanded
+                later with account settings, billing, or profile updates.
+              </p>
+              <button
+                type="button"
+                className="authButton appleBtn"
+                onClick={handleSignOut}
+                disabled={busy}
+              >
+                {busy ? "Signing out..." : "Sign out"}
+              </button>
+            </article>
+          </div>
+        ) : (
+          <p className="hint">Loading your account data...</p>
+        )}
       </section>
     </main>
   );
